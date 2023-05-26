@@ -29,7 +29,7 @@ namespace Tests.Services
         public void TestInitialize()
         {
             _userRepositoryMock = new Mock<UserRepository>();
-            var mapperConfig = new MapperConfiguration(c => c.AddProfile(new MapperProfile()));
+            var mapperConfig = new MapperConfiguration(c => c.AddProfile(new ModelsAndEntitiesMapperProfile()));
             _mapper = mapperConfig.CreateMapper();
         }
 

@@ -10,5 +10,6 @@ namespace BLL.Models.User.Delete
     {
         public Guid UserToDeleteGuid { get; set; }
         public bool IsSoft { get; set; }
+        public string RevokedBy { get; set; } = null!;
     }
 }
