@@ -15,18 +15,14 @@ namespace Tests.Repositories
     [TestClass]
     public class UserRepositoryTests
     {
-        private SqliteConnection sqliteConnection = null!;
         private DataContext _context = null!;
         private UserRepository _userRepository = null!;
 
         [TestInitialize]
         public void TestInitialize()
         {
-            sqliteConnection = new SqliteConnection("DataSource=:memory:");
-            sqliteConnection.Open();
-
             var dbContextOptions = new DbContextOptionsBuilder<DataContext>()
-                .UseSqlite(sqliteConnection).Options;
+                .UseInMemoryDatabase("DbTest").Options;
             _context = new DataContext(dbContextOptions);
             _context.Database.EnsureCreated();
 
@@ -37,7 +33,6 @@ namespace Tests.Repositories
         public void TestCleanup()
         {
             _context.Database.EnsureDeleted();
-            sqliteConnection.Close();
             _context.Dispose();
         }
 
@@ -280,12 +275,14 @@ namespace Tests.Repositories
                 if (user.RevokedOn != null)
                 {
                     isOk = false;
+                    break;
                 }
                 if (previousUserCreatedOn != default)
                 {
                     if (user.CreatedOn > previousUserCreatedOn)
                     {
                         isOk = false;
+                        break;
                     }
                 }
             }
@@ -325,6 +322,7 @@ namespace Tests.Repositories
                 if (user.Birthday > testDate)
                 {
                     isOk = false;
+                    break;
                 }
             }
 
@@ -398,10 +396,14 @@ namespace Tests.Repositories
         {
             var revokedUser = await GetRevokedUserAsync();
 
-            revokedUser.ModifiedBy = "Admin";
-            revokedUser.ModifiedOn = DateTime.UtcNow;
+            var userToReactivate = new User
+            {
+                Guid = revokedUser.Guid,
+                ModifiedBy = "Admin",
+                ModifiedOn = DateTime.UtcNow,
+            };
 
-            await _userRepository.UpdateUserActiveStatusAsync(revokedUser.Guid);
+            await _userRepository.UpdateUserActiveStatusAsync(userToReactivate);
 
             var reactivatedUser = await _context.Users.FirstOrDefaultAsync(x => x.Guid == revokedUser.Guid);
             Assert.IsNotNull(reactivatedUser);
@@ -411,7 +413,16 @@ namespace Tests.Repositories
         [TestMethod]
         [ExpectedException(typeof(UserNotFoundException))]
         public async Task UpdateUserActivateStatus_Failure_UserNotFound()
-            => await _userRepository.UpdateUserActiveStatusAsync(Guid.NewGuid());
+        {
+            var userToReactivate = new User
+            {
+                Guid = Guid.NewGuid(),
+                ModifiedBy = "Admin",
+                ModifiedOn = DateTime.UtcNow,
+            };
+
+            await _userRepository.UpdateUserActiveStatusAsync(userToReactivate);
+        }
 
 
         [TestMethod]
@@ -434,6 +445,13 @@ namespace Tests.Repositories
 
             Assert.IsTrue(await _userRepository.IsUserAdmin(admin!.Guid));
             Assert.IsFalse(await _userRepository.IsUserAdmin(notAdmin.Guid));
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(UserNotFoundException))]
+        public async Task IsUserAdmin_Failure_UserNotFound()
+        {
+            await _userRepository.IsUserAdmin(Guid.NewGuid());
         }
 
         private async Task CreateUsersRangeAsync()

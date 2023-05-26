@@ -13,16 +13,12 @@ namespace Tests.Database
     public class DatabaseTests
     {
         private DataContext _context = null!;
-        private SqliteConnection sqliteConnection = null!;
 
         [TestInitialize]
         public void TestInitialize()
         {
-            sqliteConnection = new SqliteConnection("DataSource=:memory:");
-            sqliteConnection.Open();
-
             var dbContextOptions = new DbContextOptionsBuilder<DataContext>()
-                .UseSqlite(sqliteConnection).Options;
+                .UseInMemoryDatabase("DbTest").Options;
             _context = new DataContext(dbContextOptions);
             _context.Database.EnsureCreated();
         }
@@ -31,7 +27,6 @@ namespace Tests.Database
         public void TestCleanup()
         {
             _context.Database.EnsureDeleted();
-            sqliteConnection.Close();
             _context.Dispose();
         }
 

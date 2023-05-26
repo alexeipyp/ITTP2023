@@ -12,89 +12,86 @@ namespace DAL.Repositories
 {
     public class UserRepository
     {
-        private readonly DataContext _context;
+        private readonly DataContext _context = null!;
 
         public UserRepository(DataContext context)
         {
             _context = context;
         }
 
-        public async Task CreateUserAsync(User userToCreate)
+        public UserRepository() 
         {
-            try
-            {
-                await _context.Users.AddAsync(userToCreate);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
+            #warning Use this constructor while testing
+        }
+
+        public virtual async Task CreateUserAsync(User userToCreate)
+        {
+            if(!(await IsLoginUnique(userToCreate.Login)))
             {
                 throw new NotUniqueLoginException();
             }
+
+            await _context.Users.AddAsync(userToCreate);
+            await _context.SaveChangesAsync();
         }
-        public async Task UpdateUserLoginAsync(User userToUpdate)
+        public virtual async Task UpdateUserLoginAsync(User userToUpdate)
         {
             if (!(await IsUserFound(userToUpdate.Guid)))
             {
                 throw new UserNotFoundException();
             }
-            try
-            {
-                _context.Attach(userToUpdate);
-                _context.Entry(userToUpdate).Property(p => p.Login).IsModified = true;
-                _context.Entry(userToUpdate).Property(p => p.ModifiedBy).IsModified = true;
-                _context.Entry(userToUpdate).Property(p => p.ModifiedOn).IsModified = true;
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
+            if (!(await IsLoginUnique(userToUpdate.Login)))
             {
                 throw new NotUniqueLoginException();
             }
+
+            _context.Attach(userToUpdate);
+            _context.Entry(userToUpdate).Property(p => p.Login).IsModified = true;
+            _context.Entry(userToUpdate).Property(p => p.ModifiedBy).IsModified = true;
+            _context.Entry(userToUpdate).Property(p => p.ModifiedOn).IsModified = true;
+            await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateUserPasswordAsync(User userToUpdate)
+        public virtual async Task UpdateUserPasswordAsync(User userToUpdate)
         {
-            try
-            {
-                _context.Attach(userToUpdate);
-                _context.Entry(userToUpdate).Property(p => p.PasswordHash).IsModified = true;
-                _context.Entry(userToUpdate).Property(p => p.ModifiedBy).IsModified = true;
-                _context.Entry(userToUpdate).Property(p => p.ModifiedOn).IsModified = true;
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
+            if (!(await IsUserFound(userToUpdate.Guid)))
             {
                 throw new UserNotFoundException();
             }
+
+            _context.Attach(userToUpdate);
+            _context.Entry(userToUpdate).Property(p => p.PasswordHash).IsModified = true;
+            _context.Entry(userToUpdate).Property(p => p.ModifiedBy).IsModified = true;
+            _context.Entry(userToUpdate).Property(p => p.ModifiedOn).IsModified = true;
+            await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateUserInfoAsync(User userToUpdate)
+        public virtual async Task UpdateUserInfoAsync(User userToUpdate)
         {
-            try
-            {
-                _context.Attach(userToUpdate);
-                if (userToUpdate.Name != default)
-                {
-                    _context.Entry(userToUpdate).Property(p => p.Name).IsModified = true;
-                }
-                if (userToUpdate.Birthday != default)
-                {
-                    _context.Entry(userToUpdate).Property(p => p.Birthday).IsModified = true;
-                }
-                if (userToUpdate.Gender != (int)Gender.Unknown)
-                {
-                    _context.Entry(userToUpdate).Property(p => p.Gender).IsModified = true;
-                }
-                _context.Entry(userToUpdate).Property(p => p.ModifiedBy).IsModified = true;
-                _context.Entry(userToUpdate).Property(p => p.ModifiedOn).IsModified = true;
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
+            if (!(await IsUserFound(userToUpdate.Guid)))
             {
                 throw new UserNotFoundException();
             }
+
+            _context.Attach(userToUpdate);
+            if (userToUpdate.Name != default)
+            {
+                _context.Entry(userToUpdate).Property(p => p.Name).IsModified = true;
+            }
+            if (userToUpdate.Birthday != default)
+            {
+                _context.Entry(userToUpdate).Property(p => p.Birthday).IsModified = true;
+            }
+            if (userToUpdate.Gender != (int)Gender.Unknown)
+            {
+                _context.Entry(userToUpdate).Property(p => p.Gender).IsModified = true;
+            }
+            _context.Entry(userToUpdate).Property(p => p.ModifiedBy).IsModified = true;
+            _context.Entry(userToUpdate).Property(p => p.ModifiedOn).IsModified = true;
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<User>> ReadActiveUsersListAsync()
+        public virtual async Task<IEnumerable<User>> ReadActiveUsersListAsync()
         {
             var users = await _context.Users
                 .AsNoTracking()
@@ -104,7 +101,7 @@ namespace DAL.Repositories
             return users;
         }
 
-        public async Task<User> ReadUserByGuidAsync(Guid guid)
+        public virtual async Task<User> ReadUserByGuidAsync(Guid guid)
         {
             var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Guid == guid);
             if (user == null || user == default)
@@ -114,69 +111,67 @@ namespace DAL.Repositories
             return user;
         }
 
-        public async Task<IEnumerable<User>> ReadUsersBornBeforeListAsync(DateTime dayBornBefore)
+        public virtual async Task<IEnumerable<User>> ReadUsersBornBeforeListAsync(DateTime dayBornBefore)
         {
             var users = await _context.Users.AsNoTracking().Where(x => x.Birthday <= dayBornBefore).ToListAsync();
             return users;
         }
 
-        public async Task DeleteUserSoftlyAsync(User userToDelete)
+        public virtual async Task DeleteUserSoftlyAsync(User userToDelete)
         {
-            try
-            {
-                _context.Attach(userToDelete);
-                _context.Entry(userToDelete).Property(p => p.RevokedBy).IsModified = true;
-                _context.Entry(userToDelete).Property(p => p.RevokedOn).IsModified = true;
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
+            if (!(await IsUserFound(userToDelete.Guid)))
             {
                 throw new UserNotFoundException();
             }
+
+            _context.Attach(userToDelete);
+            _context.Entry(userToDelete).Property(p => p.RevokedBy).IsModified = true;
+            _context.Entry(userToDelete).Property(p => p.RevokedOn).IsModified = true;
+            await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteUserFullyAsync(User userToDelete)
+        public virtual async Task DeleteUserFullyAsync(User userToDelete)
         {
-            try
-            {
-                _context.Attach(userToDelete);
-                _context.Entry(userToDelete).State = EntityState.Deleted;
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
+            if (!(await IsUserFound(userToDelete.Guid)))
             {
                 throw new UserNotFoundException();
             }
+
+            _context.Attach(userToDelete);
+            _context.Entry(userToDelete).State = EntityState.Deleted;
+            await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateUserActiveStatusAsync(Guid userGuid)
+        public virtual async Task UpdateUserActiveStatusAsync(User userToRestore)
         {
-            try
-            {
-                var userToRestore = new User
-                {
-                    Guid = userGuid,
-                    RevokedBy = null,
-                    RevokedOn = null,
-                };
-                _context.Attach(userToRestore);
-                _context.Entry(userToRestore).Property(p => p.RevokedBy).IsModified = true;
-                _context.Entry(userToRestore).Property(p => p.RevokedOn).IsModified = true;
-                _context.Entry(userToRestore).Property(p => p.ModifiedBy).IsModified = true;
-                _context.Entry(userToRestore).Property(p => p.ModifiedOn).IsModified = true;
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
+            if (!(await IsUserFound(userToRestore.Guid)))
             {
                 throw new UserNotFoundException();
             }
+
+            _context.Attach(userToRestore);
+            _context.Entry(userToRestore).Property(p => p.RevokedBy).IsModified = true;
+            _context.Entry(userToRestore).Property(p => p.RevokedOn).IsModified = true;
+            _context.Entry(userToRestore).Property(p => p.ModifiedBy).IsModified = true;
+            _context.Entry(userToRestore).Property(p => p.ModifiedOn).IsModified = true;
+            await _context.SaveChangesAsync();
         }
 
         public async Task<bool> IsUserActive(Guid userGuid)
             => await _context.Users.AnyAsync(x => x.Guid == userGuid && x.RevokedOn == null && x.RevokedBy == null);
 
-        public async Task<bool> IsUserAdmin(Guid userGuid)
-            => await _context.Users.AnyAsync(x => x.Guid == userGuid && x.Admin == true);
+        public virtual async Task<bool> IsUserAdmin(Guid userGuid)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Guid == userGuid);
+            if (user == default || user == null)
+            {
+                throw new UserNotFoundException();
+            }
+            return user.Admin;
+        }
+
+        private async Task<bool> IsLoginUnique(string login)
+            => !(await _context.Users.AnyAsync(x => x.Login == login));
 
         private async Task<bool> IsUserFound(Guid userGuid)
             => await _context.Users.AnyAsync(x => x.Guid == userGuid);
