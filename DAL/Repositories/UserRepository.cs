@@ -1,5 +1,6 @@
 ﻿using Common.Enums;
 using Common.Exceptions;
+using Common.Utils;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -101,6 +102,16 @@ namespace DAL.Repositories
             return users;
         }
 
+        public virtual async Task<User> ReadUserByLoginAsync(string login)
+        {
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Login == login);
+            if (user == null || user == default)
+            {
+                throw new UserNotFoundException();
+            }
+            return user;
+        }
+
         public virtual async Task<User> ReadUserByGuidAsync(Guid guid)
         {
             var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Guid == guid);
@@ -115,6 +126,19 @@ namespace DAL.Repositories
         {
             var users = await _context.Users.AsNoTracking().Where(x => x.Birthday <= dayBornBefore).ToListAsync();
             return users;
+        }
+
+        public async Task<User?> ReadActiveUserByCredentials(string login, string password)
+        {
+            var passwordHash = HashHelper.GetHash(password);
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Login == login && x.PasswordHash == passwordHash && x.RevokedBy == null && x.RevokedOn == null);
+            return user;
+        }
+
+        public async Task<User?> ReadActiveUserByGuid(Guid userGuid)
+        {
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Guid == userGuid && x.RevokedOn == null && x.RevokedBy == null);
+            return user;
         }
 
         public virtual async Task DeleteUserSoftlyAsync(User userToDelete)

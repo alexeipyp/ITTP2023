@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace BLL.Models.User.Read
 {
-    public class ReadUserByGuidModel : UserManipulationModel
+    public class ReadUserByLoginModel : UserManipulationModel
     {
-        public Guid UserToReadGuid { get; set; }
+        public string UserToReadLogin { get; set; } = null!;
     }
 }

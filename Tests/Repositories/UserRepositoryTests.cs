@@ -295,16 +295,16 @@ namespace Tests.Repositories
         {
             var userToRead = await GetActiveUserAsync();
 
-            var user = await _userRepository.ReadUserByGuidAsync(userToRead.Guid);
+            var user = await _userRepository.ReadUserByLoginAsync(userToRead.Login);
             Assert.IsNotNull(user);
-            Assert.IsTrue(user.Guid == userToRead.Guid);
+            Assert.IsTrue(user.Login == userToRead.Login);
         }
 
         [TestMethod]
         [ExpectedException(typeof(UserNotFoundException))]
         public async Task ReadUserByGuid_Failure_UserNotFound()
         {
-            var user = await _userRepository.ReadUserByGuidAsync(Guid.NewGuid());
+            var user = await _userRepository.ReadUserByLoginAsync("randomlogin");
         }
 
         [TestMethod]

@@ -343,49 +343,49 @@ namespace Tests.Services
         }
 
         [TestMethod]
-        public async Task ReadUserByGuid_Success()
+        public async Task ReadUserByLogin_Success()
         {
-            _userRepositoryMock.Setup(r => r.ReadUserByGuidAsync(It.IsAny<Guid>())).Returns(Task.FromResult(new User()));
+            _userRepositoryMock.Setup(r => r.ReadUserByLoginAsync(It.IsAny<string>())).Returns(Task.FromResult(new User()));
             _userRepositoryMock.Setup(r => r.IsUserAdmin(It.IsAny<Guid>())).Returns(Task.FromResult(true));
             var userService = new UserService(_mapper, _userRepositoryMock.Object);
 
-            var readUserByGuidModel = new ReadUserByGuidModel();
-            await userService.ReadUserByGuidAsync(readUserByGuidModel);
+            var readUserByLoginModel = new ReadUserByLoginModel();
+            await userService.ReadUserByLoginAsync(readUserByLoginModel);
         }
 
         [TestMethod]
         [ExpectedException(typeof(OnlyAdminsException))]
-        public async Task ReadUserByGuid_Failure_NotAnAdmin()
+        public async Task ReadUserByLogin_Failure_NotAnAdmin()
         {
-            _userRepositoryMock.Setup(r => r.ReadUserByGuidAsync(It.IsAny<Guid>())).Returns(Task.FromResult(new User()));
+            _userRepositoryMock.Setup(r => r.ReadUserByLoginAsync(It.IsAny<string>())).Returns(Task.FromResult(new User()));
             _userRepositoryMock.Setup(r => r.IsUserAdmin(It.IsAny<Guid>())).Returns(Task.FromResult(false));
             var userService = new UserService(_mapper, _userRepositoryMock.Object);
 
-            var readUserByGuidModel = new ReadUserByGuidModel();
-            await userService.ReadUserByGuidAsync(readUserByGuidModel);
+            var readUserByLoginModel = new ReadUserByLoginModel();
+            await userService.ReadUserByLoginAsync(readUserByLoginModel);
         }
 
         [TestMethod]
         [ExpectedException(typeof(UserNotFoundException))]
-        public async Task ReadUserByGuid_Failure_RequesterNotFound()
+        public async Task ReadUserByLogin_Failure_RequesterNotFound()
         {
             _userRepositoryMock.Setup(r => r.IsUserAdmin(It.IsAny<Guid>())).Throws(new UserNotFoundException());
             var userService = new UserService(_mapper, _userRepositoryMock.Object);
 
-            var readUserByGuidModel = new ReadUserByGuidModel();
-            await userService.ReadUserByGuidAsync(readUserByGuidModel);
+            var readUserByLoginModel = new ReadUserByLoginModel();
+            await userService.ReadUserByLoginAsync(readUserByLoginModel);
         }
 
         [TestMethod]
         [ExpectedException(typeof(UserNotFoundException))]
-        public async Task ReadUserByGuid_Failure_UserNotFound()
+        public async Task ReadUserByLogin_Failure_UserNotFound()
         {
-            _userRepositoryMock.Setup(r => r.ReadUserByGuidAsync(It.IsAny<Guid>())).Throws(new UserNotFoundException());
+            _userRepositoryMock.Setup(r => r.ReadUserByLoginAsync(It.IsAny<string>())).Throws(new UserNotFoundException());
             _userRepositoryMock.Setup(r => r.IsUserAdmin(It.IsAny<Guid>())).Returns(Task.FromResult(true));
             var userService = new UserService(_mapper, _userRepositoryMock.Object);
 
-            var readUserByGuidModel = new ReadUserByGuidModel();
-            await userService.ReadUserByGuidAsync(readUserByGuidModel);
+            var readUserByLoginModel = new ReadUserByLoginModel();
+            await userService.ReadUserByLoginAsync(readUserByLoginModel);
         }
 
         [TestMethod]

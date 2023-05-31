@@ -75,11 +75,11 @@ namespace BLL.Services
             return userModel;
         }
 
-        public async Task<UserViewModel> ReadUserByGuidAsync(ReadUserByGuidModel model)
+        public async Task<UserViewModel> ReadUserByLoginAsync(ReadUserByLoginModel model)
         {
             await CheckOnlyAdminsPermission(model);
 
-            var user = await _userRepository.ReadUserByGuidAsync(model.UserToReadGuid);
+            var user = await _userRepository.ReadUserByLoginAsync(model.UserToReadLogin);
             var userModel = _mapper.Map<UserViewModel>(user);
             return userModel;
         }
